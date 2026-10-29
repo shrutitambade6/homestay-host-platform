@@ -29,7 +29,15 @@
     </section>
 
     <section class="card">
+        <h2>Workflow</h2>
+        <p class="muted" id="no-actions" th:if="${#lists.isEmpty(actions)}">No status changes available for your role.</p>
         <div class="actions">
+            <form th:each="a : ${actions}" th:action="@{/bookings/{id}/status(id=${booking.id})}" method="post" class="inline">
+                <input type="hidden" name="action" th:value="${a.name()}">
+                <button type="submit" class="btn" th:id="${'action-' + a.name()}"
+                        th:classappend="${a.name() == 'CANCEL'} ? 'btn-danger' : 'btn-primary'"
+                        th:text="${a.label}">Confirm</button>
+            </form>
             <a th:if="${booking.status.editable}" th:href="@{/bookings/{id}/edit(id=${booking.id})}" id="edit-btn" class="btn">Edit</a>
             <a th:href="@{/bookings}" class="btn btn-ghost" id="back-link">Back to list</a>
         </div>

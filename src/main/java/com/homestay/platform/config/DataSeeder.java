@@ -1,6 +1,8 @@
 package com.homestay.platform.config;
 
+import com.homestay.platform.model.BookingAction;
 import com.homestay.platform.model.Property;
+import com.homestay.platform.model.Role;
 import com.homestay.platform.repository.PropertyRepository;
 import com.homestay.platform.service.BookingService;
 import com.homestay.platform.web.dto.BookingForm;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.List;
 
 /** Loads demo properties and bookings on first start (disable with app.seed-demo-data=false). */
 @Component
@@ -20,6 +23,7 @@ import java.time.LocalDate;
 public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
+    private static final List<Role> ADMIN = List.of(Role.ADMIN);
 
     private final PropertyRepository properties;
     private final BookingService bookingService;
@@ -43,14 +47,17 @@ public class DataSeeder implements CommandLineRunner {
 
         LocalDate today = LocalDate.now(clock);
         booking("Aarav Sharma", "9820011111", hill, today, today.plusDays(2), 2);
-        booking("Priya Desai", "9820022222", sea, today.plusDays(3), today.plusDays(5), 3);
-        booking("Rohan Patil", "9820033333", farm, today.minusDays(1), today.plusDays(1), 4);
-        booking("Sneha Kulkarni", "9820044444", hill, today.minusDays(6), today.minusDays(3), 2);
-        booking("Vikram Joshi", "9820055555", sea, today.plusDays(7), today.plusDays(9), 2);
+        booking("Priya Desai", "9820022222", sea, today.plusDays(3), today.plusDays(5), 3, BookingAction.CONFIRM);
+        booking("Rohan Patil", "9820033333", farm, today.minusDays(1), today.plusDays(1), 4,
+                BookingAction.CONFIRM, BookingAction.CHECK_IN);
+        booking("Sneha Kulkarni", "9820044444", hill, today.minusDays(6), today.minusDays(3), 2,
+                BookingAction.CONFIRM, BookingAction.CHECK_IN, BookingAction.CHECK_OUT);
+        booking("Vikram Joshi", "9820055555", sea, today.plusDays(7), today.plusDays(9), 2, BookingAction.CANCEL);
         booking("Ananya Iyer", "9820066666", farm, today.plusDays(1), today.plusDays(4), 5);
     }
 
-    private void booking(String guest, String phone, Property p, LocalDate in, LocalDate out, int guests) {
+    private void booking(String guest, String phone, Property p, LocalDate in, LocalDate out, int guests,
+                         BookingAction... actions) {
         BookingForm f = new BookingForm();
         f.setGuestName(guest);
         f.setGuestPhone(phone);
@@ -58,6 +65,9 @@ public class DataSeeder implements CommandLineRunner {
         f.setCheckIn(in);
         f.setCheckOut(out);
         f.setGuests(guests);
-        bookingService.create(f, "seed");
+        Long id = bookingService.create(f, "seed").getId();
+        for (BookingAction a : actions) {
+            bookingService.applyAction(id, a, ADMIN, "seed");
+        }
     }
 }

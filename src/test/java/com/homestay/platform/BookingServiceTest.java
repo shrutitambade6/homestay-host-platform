@@ -1,10 +1,13 @@
 package com.homestay.platform;
 
 import com.homestay.platform.model.Booking;
+import com.homestay.platform.model.BookingAction;
 import com.homestay.platform.model.BookingStatus;
 import com.homestay.platform.model.Property;
+import com.homestay.platform.model.Role;
 import com.homestay.platform.repository.PropertyRepository;
 import com.homestay.platform.service.BookingService;
+import com.homestay.platform.service.WorkflowException;
 import com.homestay.platform.web.dto.BookingForm;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -73,6 +78,45 @@ class BookingServiceTest {
         assertThat(service.search(b.getBookingRef(), null, null)).hasSize(1);
         assertThat(service.search("Zara", BookingStatus.CANCELLED, null)).isEmpty();
         assertThat(service.search("", BookingStatus.PENDING, b.getProperty().getId())).hasSize(1);
+    }
+
+    @Test
+    void fullWorkflowWithCorrectRoles() {
+        Booking b = service.create(form("Workflow Guest", property(), 2), "host");
+        Long id = b.getId();
+
+        service.applyAction(id, BookingAction.CONFIRM, List.of(Role.HOST), "host");
+        service.applyAction(id, BookingAction.CHECK_IN, List.of(Role.STAFF), "staff");
+        Booking done = service.applyAction(id, BookingAction.CHECK_OUT, List.of(Role.STAFF), "staff");
+
+        assertThat(done.getStatus()).isEqualTo(BookingStatus.CHECKED_OUT);
+    }
+
+    @Test
+    void staffCannotConfirm() {
+        Booking b = service.create(form("Role Guest", property(), 1), "staff");
+
+        assertThatThrownBy(() -> service.applyAction(b.getId(), BookingAction.CONFIRM, List.of(Role.STAFF), "staff"))
+                .isInstanceOf(WorkflowException.class)
+                .hasMessageContaining("role");
+    }
+
+    @Test
+    void invalidTransitionIsRejected() {
+        Booking b = service.create(form("Skip Guest", property(), 1), "host");
+
+        assertThatThrownBy(() -> service.applyAction(b.getId(), BookingAction.CHECK_OUT, List.of(Role.ADMIN), "admin"))
+                .isInstanceOf(WorkflowException.class);
+    }
+
+    @Test
+    void checkedInBookingCannotBeEdited() {
+        Booking b = service.create(form("Locked Guest", property(), 1), "host");
+        service.applyAction(b.getId(), BookingAction.CONFIRM, List.of(Role.HOST), "host");
+        service.applyAction(b.getId(), BookingAction.CHECK_IN, List.of(Role.HOST), "host");
+
+        assertThatThrownBy(() -> service.update(b.getId(), BookingForm.from(b), "host"))
+                .isInstanceOf(WorkflowException.class);
     }
 
 }

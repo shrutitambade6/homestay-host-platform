@@ -1,8 +1,10 @@
 package com.homestay.platform.service;
 
 import com.homestay.platform.model.Booking;
+import com.homestay.platform.model.BookingAction;
 import com.homestay.platform.model.BookingStatus;
 import com.homestay.platform.model.Property;
+import com.homestay.platform.model.Role;
 import com.homestay.platform.repository.BookingRepository;
 import com.homestay.platform.repository.PropertyRepository;
 import com.homestay.platform.web.dto.BookingForm;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -80,5 +84,27 @@ public class BookingService {
 
     private static String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s.trim();
+    }
+
+    // ---------------------------------------------------------------- role-based workflow
+
+    public Booking applyAction(Long id, BookingAction action, Collection<Role> roles, String username) {
+        Booking b = get(id);
+        if (!action.isAllowedFor(roles)) {
+            throw new WorkflowException("Your role is not allowed to " + action.getLabel().toLowerCase());
+        }
+        if (!action.canApplyTo(b.getStatus())) {
+            throw new WorkflowException("Cannot " + action.getLabel().toLowerCase() + " a booking that is "
+                    + b.getStatus().getLabel().toLowerCase());
+        }
+        b.setStatus(action.getTo());
+        b.setLastUpdatedBy(username);
+        return bookings.save(b);
+    }
+
+    public List<BookingAction> availableActions(Booking b, Collection<Role> roles) {
+        return Arrays.stream(BookingAction.values())
+                .filter(a -> a.isAvailable(b.getStatus(), roles))
+                .toList();
     }
 }
