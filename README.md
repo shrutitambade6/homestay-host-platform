@@ -6,11 +6,16 @@ A containerized web platform for homestay hosts and staff to manage properties a
 
 ## Status
 
-Project skeleton – features are developed on `feature/*` branches (see CONTRIBUTING.md).
+MVP complete: bookings, search, role-based workflow and dashboard.
 
 ## Run locally
 
-Coming soon – the skeleton builds with `mvn package`.
+```powershell
+mvn clean package
+java -jar target\\homestay.war
+```
+
+Open http://localhost:8080 – demo users: `host/host123`, `staff/staff123`, `admin/admin123`.
 
 ## Documentation
 

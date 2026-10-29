@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('dashboard')}"></nav>
+<main class="container">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="page-head">
+        <h1 id="page-title">Dashboard</h1>
+        <a class="btn btn-primary" id="dash-new-booking" th:href="@{/bookings/new}">+ New booking</a>
+    </div>
+
+    <section class="stats">
+        <div class="stat" id="stat-total">
+            <span class="label">Total bookings</span>
+            <span class="value" th:text="${summary.totalBookings}">0</span>
+        </div>
+        <div class="stat" id="stat-checkins-today">
+            <span class="label">Check-ins today</span>
+            <span class="value" th:text="${summary.todaysCheckIns}">0</span>
+        </div>
+        <div class="stat" id="stat-in-house">
+            <span class="label">Guests in house</span>
+            <span class="value" th:text="${summary.guestsInHouse}">0</span>
+        </div>
+        <div class="stat" id="stat-occupancy">
+            <span class="label">Occupancy tonight</span>
+            <span class="value" th:text="${summary.occupancyPercent} + '%'">0%</span>
+            <span class="sub" th:text="${summary.roomsOccupiedTonight} + ' of ' + ${summary.totalRooms} + ' rooms'">0 of 0</span>
+        </div>
+        <div class="stat" id="stat-revenue">
+            <span class="label">Booked revenue</span>
+            <span class="value" th:text="'₹' + ${#numbers.formatDecimal(summary.revenue, 1, 'COMMA', 0, 'POINT')}">₹0</span>
+            <span class="sub">confirmed + in-house + completed</span>
+        </div>
+        <div class="stat" id="stat-properties">
+            <span class="label">Active properties</span>
+            <span class="value" th:text="${summary.activeProperties}">0</span>
+        </div>
+    </section>
+
+    <div class="grid-2">
+        <section class="card">
+            <h2>Bookings by status</h2>
+            <table class="table" id="status-table">
+                <tr th:each="s : ${statuses}">
+                    <td><span class="badge" th:classappend="${'st-' + s.name()}" th:text="${s.label}">Pending</span></td>
+                    <td class="num">
+                        <a th:href="@{/bookings(status=${s.name()})}" th:id="${'count-' + s.name()}"
+                           th:text="${summary.countsByStatus.get(s)}">0</a>
+                    </td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>Upcoming arrivals</h2>
+            <p class="muted" th:if="${#lists.isEmpty(summary.upcoming)}">No upcoming arrivals.</p>
+            <table class="table" id="upcoming-table" th:unless="${#lists.isEmpty(summary.upcoming)}">
+                <thead><tr><th>Ref</th><th>Guest</th><th>Property</th><th>Check-in</th><th>Status</th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${summary.upcoming}">
+                    <td><a th:href="@{/bookings/{id}(id=${b.id})}" th:text="${b.bookingRef}">HS-00001</a></td>
+                    <td th:text="${b.guestName}">Guest</td>
+                    <td th:text="${b.property.name}">Property</td>
+                    <td th:text="${#temporals.format(b.checkIn, 'dd MMM yyyy')}">01 Jan</td>
+                    <td><span class="badge" th:classappend="${'st-' + b.status.name()}" th:text="${b.status.label}">Pending</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

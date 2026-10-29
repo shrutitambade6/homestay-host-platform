@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head((${propertyId == null} ? 'Add property' : 'Edit property'))}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('properties')}"></nav>
+<main class="container narrow">
+    <h1 id="page-title" th:text="${propertyId == null} ? 'Add property' : 'Edit property'">Add property</h1>
+    <form class="card form" id="property-form" method="post" th:object="${form}"
+          th:action="${propertyId == null} ? @{/properties} : @{/properties/{id}(id=${propertyId})}">
+        <label for="name">Name *</label>
+        <input type="text" th:field="*{name}" th:errorclass="invalid">
+        <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+
+        <label for="location">Location *</label>
+        <input type="text" th:field="*{location}" th:errorclass="invalid">
+        <span class="field-error" th:if="${#fields.hasErrors('location')}" th:errors="*{location}"></span>
+
+        <div class="row">
+            <div>
+                <label for="totalRooms">Rooms *</label>
+                <input type="number" th:field="*{totalRooms}" min="1" max="100" th:errorclass="invalid">
+                <span class="field-error" th:if="${#fields.hasErrors('totalRooms')}" th:errors="*{totalRooms}"></span>
+            </div>
+            <div>
+                <label for="pricePerNight">Price per night (₹) *</label>
+                <input type="number" step="0.01" th:field="*{pricePerNight}" th:errorclass="invalid">
+                <span class="field-error" th:if="${#fields.hasErrors('pricePerNight')}" th:errors="*{pricePerNight}"></span>
+            </div>
+        </div>
+
+        <label class="check"><input type="checkbox" th:field="*{active}"> Active (accepting bookings)</label>
+
+        <div class="actions">
+            <button type="submit" id="save-property-btn" class="btn btn-primary">Save property</button>
+            <a th:href="@{/properties}" class="btn btn-ghost">Cancel</a>
+        </div>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

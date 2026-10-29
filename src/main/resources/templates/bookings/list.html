@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bookings')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('bookings')}"></nav>
+<main class="container">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="page-head">
+        <h1 id="page-title">Bookings</h1>
+        <a class="btn btn-primary" id="new-booking-btn" th:href="@{/bookings/new}">+ New booking</a>
+    </div>
+
+    <form class="search card" th:action="@{/bookings}" method="get" id="search-form">
+        <input type="text" id="search-q" name="q" th:value="${q}" placeholder="Guest name, phone or booking ref">
+        <select id="search-status" name="status">
+            <option value="">All statuses</option>
+            <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
+                    th:selected="${s == status}">Pending</option>
+        </select>
+        <select id="search-property" name="propertyId">
+            <option value="">All properties</option>
+            <option th:each="p : ${properties}" th:value="${p.id}" th:text="${p.name}"
+                    th:selected="${p.id == propertyId}">Property</option>
+        </select>
+        <button type="submit" id="search-btn" class="btn">Search</button>
+        <a th:href="@{/bookings}" id="search-clear" class="btn btn-ghost">Clear</a>
+    </form>
+
+    <p class="muted" id="result-count" th:text="${#lists.size(bookings)} + ' booking(s)'">0 booking(s)</p>
+
+    <table class="table card" id="bookings-table">
+        <thead>
+        <tr><th>Ref</th><th>Guest</th><th>Phone</th><th>Property</th><th>Check-in</th><th>Check-out</th>
+            <th class="num">Amount</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="b : ${bookings}" class="booking-row">
+            <td><a class="booking-link" th:href="@{/bookings/{id}(id=${b.id})}" th:text="${b.bookingRef}">HS-00001</a></td>
+            <td class="guest-name" th:text="${b.guestName}">Guest</td>
+            <td th:text="${b.guestPhone}">9999999999</td>
+            <td th:text="${b.property.name}">Property</td>
+            <td th:text="${#temporals.format(b.checkIn, 'dd MMM yyyy')}">01 Jan</td>
+            <td th:text="${#temporals.format(b.checkOut, 'dd MMM yyyy')}">02 Jan</td>
+            <td class="num" th:text="'₹' + ${#numbers.formatDecimal(b.totalAmount, 1, 'COMMA', 0, 'POINT')}">₹0</td>
+            <td><span class="badge row-status" th:classappend="${'st-' + b.status.name()}" th:text="${b.status.label}">Pending</span></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(bookings)}"><td colspan="8" class="muted" id="no-results">No bookings match your search.</td></tr>
+        </tbody>
+    </table>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
