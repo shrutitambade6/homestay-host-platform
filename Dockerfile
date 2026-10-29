@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # ---------------------------------------------------------------------------
 # Homestay Host Management Platform - container image (Task 11)
 # Multi-stage: stage 1 builds the WAR with Maven, stage 2 is a small JRE image.
