@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Properties')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('properties')}"></nav>
+<main class="container">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="page-head">
+        <h1 id="page-title">Properties</h1>
+        <a sec:authorize="hasAnyRole('HOST','ADMIN')" class="btn btn-primary" id="new-property-btn"
+           th:href="@{/properties/new}">+ Add property</a>
+    </div>
+
+    <table class="table card" id="properties-table">
+        <thead><tr><th>Name</th><th>Location</th><th class="num">Rooms</th><th class="num">Price / night</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="p : ${properties}">
+            <td class="property-name" th:text="${p.name}">Name</td>
+            <td th:text="${p.location}">Location</td>
+            <td class="num" th:text="${p.totalRooms}">1</td>
+            <td class="num" th:text="'₹' + ${#numbers.formatDecimal(p.pricePerNight, 1, 'COMMA', 0, 'POINT')}">₹0</td>
+            <td><span class="badge" th:classappend="${p.active} ? 'st-CONFIRMED' : 'st-CANCELLED'"
+                      th:text="${p.active} ? 'Active' : 'Inactive'">Active</span></td>
+            <td><a sec:authorize="hasAnyRole('HOST','ADMIN')" th:href="@{/properties/{id}/edit(id=${p.id})}">Edit</a></td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

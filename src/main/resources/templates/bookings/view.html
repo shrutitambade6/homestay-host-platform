@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(('Booking ' + ${booking.bookingRef}))}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('bookings')}"></nav>
+<main class="container narrow">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="page-head">
+        <h1>Booking <span id="booking-ref" th:text="${booking.bookingRef}">HS-00001</span></h1>
+        <span id="booking-status" class="badge big" th:classappend="${'st-' + booking.status.name()}"
+              th:text="${booking.status.label}" th:attr="data-status=${booking.status.name()}">Pending</span>
+    </div>
+
+    <section class="card">
+        <dl class="details">
+            <dt>Guest</dt><dd id="detail-guest" th:text="${booking.guestName}">Guest</dd>
+            <dt>Phone</dt><dd id="detail-phone" th:text="${booking.guestPhone}">9999999999</dd>
+            <dt>Email</dt><dd th:text="${booking.guestEmail ?: '—'}">—</dd>
+            <dt>Property</dt><dd id="detail-property" th:text="${booking.property.name + ', ' + booking.property.location}">Property</dd>
+            <dt>Stay</dt>
+            <dd id="detail-stay" th:text="${#temporals.format(booking.checkIn, 'dd MMM yyyy')} + ' → ' + ${#temporals.format(booking.checkOut, 'dd MMM yyyy')} + ' (' + ${booking.nights} + ' night(s))'">dates</dd>
+            <dt>Guests</dt><dd th:text="${booking.guests}">1</dd>
+            <dt>Total</dt><dd id="detail-amount" th:text="'₹' + ${#numbers.formatDecimal(booking.totalAmount, 1, 'COMMA', 2, 'POINT')}">₹0</dd>
+            <dt>Notes</dt><dd th:text="${booking.notes ?: '—'}">—</dd>
+            <dt>Created by</dt><dd th:text="${booking.createdBy}">host</dd>
+            <dt>Last updated by</dt><dd id="detail-updated-by" th:text="${booking.lastUpdatedBy}">host</dd>
+        </dl>
+    </section>
+
+    <section class="card">
+        <div class="actions">
+            <a th:if="${booking.status.editable}" th:href="@{/bookings/{id}/edit(id=${booking.id})}" id="edit-btn" class="btn">Edit</a>
+            <a th:href="@{/bookings}" class="btn btn-ghost" id="back-link">Back to list</a>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
