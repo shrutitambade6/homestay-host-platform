@@ -8,7 +8,8 @@
 // Required Jenkins setup (see docs/LAB-GUIDE-WINDOWS.md):
 //   * Global Tool Configuration: JDK named "JDK17", Maven named "Maven3"
 //   * Plugins: Pipeline, Git, JUnit, Timestamper (all in "suggested plugins")
-//   * Credential "dockerhub-creds" (username + access token) only if PUSH_IMAGE is ticked
+//   * PUSH_IMAGE pushes to DOCKER_REPO. Default = local registry localhost:5000 (started by the pipeline).
+//     For Docker Hub set DOCKER_REPO=<user>/homestay-host-platform and add credential "dockerhub-creds".
 // =============================================================================
 
 def runCmd(String cmd) {
@@ -42,7 +43,7 @@ pipeline {
                      description: 'Build a versioned Docker image and (re)deploy the container')
         booleanParam(name: 'PUSH_IMAGE', defaultValue: false,
                      description: 'Push the image to Docker Hub (needs credential dockerhub-creds)')
-        string(name: 'DOCKER_REPO', defaultValue: 'shrutitambade/homestay-host-platform',
+        string(name: 'DOCKER_REPO', defaultValue: 'localhost:5000/homestay-host-platform',
                description: 'Image repository, e.g. <dockerhub-user>/homestay-host-platform or localhost:5000/homestay-host-platform')
         string(name: 'CONTAINER_PORT', defaultValue: '8085',
                description: 'Host port for the deployed container')
@@ -144,21 +145,44 @@ pipeline {
             }
         }
 
+        stage('Start Local Registry') {
+            when { expression { params.DOCKER_DEPLOY && params.PUSH_IMAGE && params.DOCKER_REPO.startsWith('localhost:5000/') } }
+            steps {
+                // Local Docker registry (registry:2) on port 5000 - started once, kept running
+                script {
+                    if (runStatus("docker inspect -f {{.State.Running}} homestay-registry") != 0) {
+                        runCmd "docker run -d --name homestay-registry --restart unless-stopped -p 5000:5000 -v homestay-registry:/var/lib/registry mirror.gcr.io/library/registry:2"
+                    } else {
+                        runStatus("docker start homestay-registry")
+                    }
+                }
+            }
+        }
+
         stage('Docker Push') {
             when { expression { params.DOCKER_DEPLOY && params.PUSH_IMAGE } }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                                                  usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
-                    script {
-                        if (isUnix()) {
-                            sh 'echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin'
-                        } else {
-                            bat '@echo %DH_PASS%| docker login -u %DH_USER% --password-stdin'
+                script {
+                    if (!params.DOCKER_REPO.startsWith('localhost:')) {
+                        // Docker Hub (or another remote registry) needs credential "dockerhub-creds"
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                          usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+                            if (isUnix()) {
+                                sh 'echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin'
+                            } else {
+                                bat '@echo %DH_PASS%| docker login -u %DH_USER% --password-stdin'
+                            }
                         }
                     }
                 }
                 runCmd "docker push ${params.DOCKER_REPO}:${env.IMAGE_TAG}"
                 runCmd "docker push ${params.DOCKER_REPO}:latest"
+                script {
+                    if (params.DOCKER_REPO.startsWith('localhost:5000/')) {
+                        def name = params.DOCKER_REPO.substring('localhost:5000/'.length())
+                        runCmd "curl -fsS http://localhost:5000/v2/${name}/tags/list"
+                    }
+                }
             }
         }
 
