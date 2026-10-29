@@ -1,0 +1,10 @@
+---
+# Task 13 - Configuration management: prepare a node with every server prerequisite
+#   packages, users, folders, config files, ports, Docker service
+# Run:  ansible-playbook playbooks/configure.yml
+- name: Configure Homestay target node
+  hosts: homestay_nodes
+  become: true
+  roles:
+    - common
+    - docker

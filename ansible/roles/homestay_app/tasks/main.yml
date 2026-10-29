@@ -1,0 +1,131 @@
+---
+# Deploys app_version as a container, verifies health, records the release and
+# automatically rolls back to the last good version if the new one is unhealthy.
+
+- name: Read currently deployed version
+  ansible.builtin.slurp:
+    src: "{{ app_release_dir }}/current"
+  register: current_raw
+  failed_when: false
+
+- name: Read previous version
+  ansible.builtin.slurp:
+    src: "{{ app_release_dir }}/previous"
+  register: previous_raw
+  failed_when: false
+
+- name: Remember release state
+  ansible.builtin.set_fact:
+    current_version: "{{ (current_raw.content | b64decode | trim) if (current_raw.content is defined) else '' }}"
+    previous_version: "{{ (previous_raw.content | b64decode | trim) if (previous_raw.content is defined) else '' }}"
+    app_image: "{{ app_image_repo }}:{{ app_version }}"
+    health_url: "http://localhost:{{ app_host_port }}{{ app_health_path }}"
+
+- name: Show release plan
+  ansible.builtin.debug:
+    msg: "Deploying {{ app_image }} (currently running: {{ current_version | default('none', true) }})"
+
+- name: Deploy and verify new release
+  block:
+    - name: Copy image archive to node
+      ansible.builtin.copy:
+        src: "{{ app_image_archive }}"
+        dest: "{{ app_base_dir }}/image-{{ app_version }}.tar"
+        mode: "0644"
+      when: app_image_archive is defined
+
+    - name: Load image from archive
+      community.docker.docker_image:
+        name: "{{ app_image_repo }}"
+        tag: "{{ app_version }}"
+        source: load
+        load_path: "{{ app_base_dir }}/image-{{ app_version }}.tar"
+      when: app_image_archive is defined
+
+    - name: Pull image from registry
+      community.docker.docker_image:
+        name: "{{ app_image_repo }}"
+        tag: "{{ app_version }}"
+        source: pull
+      when: app_image_archive is not defined
+
+    - name: Run application container
+      community.docker.docker_container:
+        name: "{{ app_container_name }}"
+        image: "{{ app_image }}"
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "{{ app_host_port }}:{{ app_container_port }}"
+        env_file: "{{ app_config_dir }}/homestay.env"
+        volumes:
+          - "{{ app_data_volume }}:/app/data"
+        labels:
+          app: homestay
+          release: "{{ app_version }}"
+
+    - name: Wait for health check to pass
+      ansible.builtin.uri:
+        url: "{{ health_url }}"
+        status_code: 200
+        return_content: true
+      register: health
+      until: health.status == 200
+      retries: "{{ app_health_retries }}"
+      delay: "{{ app_health_delay }}"
+
+    - name: Health check result
+      ansible.builtin.debug:
+        msg: "{{ app_image }} is healthy: {{ (health.content | from_json).status | default(health.content) }}"
+
+    - name: Record previous release
+      ansible.builtin.copy:
+        content: "{{ current_version }}\n"
+        dest: "{{ app_release_dir }}/previous"
+        mode: "0644"
+      when: current_version | length > 0 and current_version != app_version
+
+    - name: Record current release
+      ansible.builtin.copy:
+        content: "{{ app_version }}\n"
+        dest: "{{ app_release_dir }}/current"
+        mode: "0644"
+
+  rescue:
+    - name: Deployment failed - announce rollback
+      ansible.builtin.debug:
+        msg: "Release {{ app_version }} failed. Rolling back to {{ current_version | default('nothing', true) }}"
+
+    - name: Restore last good container
+      community.docker.docker_container:
+        name: "{{ app_container_name }}"
+        image: "{{ app_image_repo }}:{{ current_version }}"
+        state: started
+        recreate: true
+        restart_policy: unless-stopped
+        published_ports:
+          - "{{ app_host_port }}:{{ app_container_port }}"
+        env_file: "{{ app_config_dir }}/homestay.env"
+        volumes:
+          - "{{ app_data_volume }}:/app/data"
+        labels:
+          app: homestay
+          release: "{{ current_version }}"
+      when: current_version | length > 0 and current_version != app_version
+
+    - name: Verify restored release is healthy
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_host_port }}/actuator/health"
+        status_code: 200
+      register: restored
+      until: restored.status == 200
+      retries: "{{ app_health_retries }}"
+      delay: "{{ app_health_delay }}"
+      when: current_version | length > 0 and current_version != app_version
+
+    - name: Fail the play after recovery
+      ansible.builtin.fail:
+        msg: >-
+          Deployment of {{ app_version }} failed the health check.
+          {{ ('Recovered: ' ~ current_version ~ ' is running again.') if (current_version | length > 0)
+             else 'No previous release to roll back to.' }}

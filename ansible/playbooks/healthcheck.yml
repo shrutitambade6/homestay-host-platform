@@ -1,0 +1,38 @@
+---
+# Health / status report for the node
+# Run:  ansible-playbook playbooks/healthcheck.yml
+- name: Homestay health check
+  hosts: homestay_nodes
+  become: true
+  tasks:
+    - name: Application health endpoint
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_host_port }}/actuator/health"
+        return_content: true
+      register: health
+
+    - name: Application version endpoint
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_host_port }}/api/version"
+        return_content: true
+      register: version
+
+    - name: Container details
+      community.docker.docker_container_info:
+        name: "{{ app_container_name }}"
+      register: container
+
+    - name: Recorded release
+      ansible.builtin.command: "cat {{ app_release_dir }}/current"
+      register: release
+      changed_when: false
+      failed_when: false
+
+    - name: Report
+      ansible.builtin.debug:
+        msg:
+          - "Health:    {{ (health.content | from_json).status }}"
+          - "Version:   {{ version.content | from_json }}"
+          - "Image:     {{ container.container.Config.Image if container.exists else 'not running' }}"
+          - "State:     {{ container.container.State.Status if container.exists else 'n/a' }}"
+          - "Release:   {{ release.stdout | default('none') }}"

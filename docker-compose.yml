@@ -1,0 +1,19 @@
+# Local run with Docker Compose:  docker compose up -d --build
+services:
+  homestay-app:
+    build:
+      context: .
+      args:
+        APP_ENV: docker
+    image: homestay-host-platform:local
+    container_name: homestay-app
+    ports:
+      - "8085:8080"
+    environment:
+      HOMESTAY_DATA_DIR: /app/data
+    volumes:
+      - homestay-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  homestay-data:
