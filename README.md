@@ -10,7 +10,8 @@ Project skeleton – features are developed on `feature/*` branches (see CONTRIB
 
 ## Run locally
 
-Coming soon – the skeleton builds with `mvn package`.
+Build with `mvn package` and start with `mvn spring-boot:run`.
+The app will listen on port 8080.
 
 ## Documentation
 
