@@ -4,7 +4,7 @@
 // (The root Jenkinsfile is the final pipeline that adds Selenium + Docker.)
 // =============================================================================
 
-def run(String cmd) {
+def runCmd(String cmd) {
     if (isUnix()) { sh cmd } else { bat cmd }
 }
 
@@ -32,11 +32,11 @@ pipeline {
             steps { checkout scm }
         }
         stage('Build') {
-            steps { run "mvn -B clean compile -Dapp.env=${params.APP_ENV}" }
+            steps { runCmd "mvn -B clean compile -Dapp.env=${params.APP_ENV}" }
         }
         stage('Package') {
             steps {
-                run "mvn -B package -Dapp.env=${params.APP_ENV}"
+                runCmd "mvn -B package -Dapp.env=${params.APP_ENV}"
                 archiveArtifacts artifacts: 'target/homestay.war', fingerprint: true
             }
             post {

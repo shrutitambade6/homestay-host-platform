@@ -11,7 +11,7 @@
 //   * Credential "dockerhub-creds" (username + access token) only if PUSH_IMAGE is ticked
 // =============================================================================
 
-def run(String cmd) {
+def runCmd(String cmd) {
     if (isUnix()) { sh cmd } else { bat cmd }
 }
 
@@ -79,13 +79,13 @@ pipeline {
 
         stage('Build') {
             steps {
-                run "mvn -B clean compile -Dapp.env=${params.APP_ENV}"
+                runCmd "mvn -B clean compile -Dapp.env=${params.APP_ENV}"
             }
         }
 
         stage('Unit Tests') {
             steps {
-                run "mvn -B test -Dapp.env=${params.APP_ENV}"
+                runCmd "mvn -B test -Dapp.env=${params.APP_ENV}"
             }
             post {
                 always {
@@ -96,7 +96,7 @@ pipeline {
 
         stage('Package') {
             steps {
-                run "mvn -B package -DskipTests -Dapp.env=${params.APP_ENV}"
+                runCmd "mvn -B package -DskipTests -Dapp.env=${params.APP_ENV}"
                 archiveArtifacts artifacts: 'target/homestay.war', fingerprint: true
             }
         }
@@ -105,7 +105,7 @@ pipeline {
             when { expression { params.RUN_SELENIUM } }
             steps {
                 // Failing UI tests fail this stage, so every deployment stage below is skipped.
-                run "mvn -B verify -Pselenium -DskipUTs=true -Dheadless=true -Dapp.env=${params.APP_ENV}"
+                runCmd "mvn -B verify -Pselenium -DskipUTs=true -Dheadless=true -Dapp.env=${params.APP_ENV}"
             }
             post {
                 always {
@@ -137,8 +137,8 @@ pipeline {
         stage('Docker Build') {
             when { expression { params.DOCKER_DEPLOY } }
             steps {
-                run "docker build --build-arg APP_ENV=${params.APP_ENV} -t ${params.DOCKER_REPO}:${env.IMAGE_TAG} -t ${params.DOCKER_REPO}:latest ."
-                run "docker image ls ${params.DOCKER_REPO}"
+                runCmd "docker build --build-arg APP_ENV=${params.APP_ENV} -t ${params.DOCKER_REPO}:${env.IMAGE_TAG} -t ${params.DOCKER_REPO}:latest ."
+                runCmd "docker image ls ${params.DOCKER_REPO}"
             }
         }
 
@@ -155,8 +155,8 @@ pipeline {
                         }
                     }
                 }
-                run "docker push ${params.DOCKER_REPO}:${env.IMAGE_TAG}"
-                run "docker push ${params.DOCKER_REPO}:latest"
+                runCmd "docker push ${params.DOCKER_REPO}:${env.IMAGE_TAG}"
+                runCmd "docker push ${params.DOCKER_REPO}:latest"
             }
         }
 
@@ -165,7 +165,7 @@ pipeline {
             steps {
                 // Remove the old container (ignore "no such container" on the first run)
                 runStatus("docker rm -f ${env.CONTAINER_NAME}")
-                run "docker run -d --name ${env.CONTAINER_NAME} --restart unless-stopped -p ${params.CONTAINER_PORT}:8080 -v homestay-data:/app/data ${params.DOCKER_REPO}:${env.IMAGE_TAG}"
+                runCmd "docker run -d --name ${env.CONTAINER_NAME} --restart unless-stopped -p ${params.CONTAINER_PORT}:8080 -v homestay-data:/app/data ${params.DOCKER_REPO}:${env.IMAGE_TAG}"
             }
         }
 
@@ -177,8 +177,8 @@ pipeline {
                         runStatus("curl -fsS http://localhost:${params.CONTAINER_PORT}/actuator/health") == 0
                     }
                 }
-                run "curl -fsS http://localhost:${params.CONTAINER_PORT}/api/version"
-                run "docker ps --filter name=${env.CONTAINER_NAME}"
+                runCmd "curl -fsS http://localhost:${params.CONTAINER_PORT}/api/version"
+                runCmd "docker ps --filter name=${env.CONTAINER_NAME}"
             }
         }
     }
