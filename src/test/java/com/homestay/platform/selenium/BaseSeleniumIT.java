@@ -134,12 +134,26 @@ public abstract class BaseSeleniumIT {
         WebElement old = driver.findElement(By.tagName("html"));
         click(locator);
         try {
-            wait.until(ExpectedConditions.stalenessOf(old));
+            wait.until(d -> isGone(old));
         } catch (TimeoutException e) {
             // The click was swallowed: submit the button's form directly and wait again
             WebElement el = driver.findElement(locator);
             ((JavascriptExecutor) driver).executeScript("arguments[0].form.requestSubmit(arguments[0]);", el);
-            wait.until(ExpectedConditions.stalenessOf(old));
+            wait.until(d -> isGone(old));
+        }
+    }
+
+    /**
+     * True once the element's page has been replaced. Newer Chrome versions report a detached node
+     * either as StaleElementReferenceException or as a generic "Node ... does not belong to the
+     * document" WebDriverException, so any WebDriverException counts as gone.
+     */
+    private static boolean isGone(WebElement el) {
+        try {
+            el.isEnabled();
+            return false;
+        } catch (WebDriverException e) {
+            return true;
         }
     }
 
