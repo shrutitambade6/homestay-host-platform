@@ -1,0 +1,61 @@
+---
+- name: Install required OS packages
+  tags: [packages]
+  ansible.builtin.apt:
+    name: "{{ required_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create application group
+  ansible.builtin.group:
+    name: "{{ app_group }}"
+    system: true
+    state: present
+
+- name: Create application user
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ app_base_dir }}"
+    create_home: false
+    state: present
+
+- name: Create application folders
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0755"
+  loop:
+    - "{{ app_base_dir }}"
+    - "{{ app_config_dir }}"
+    - "{{ app_release_dir }}"
+    - "{{ app_backup_dir }}"
+    - "{{ app_log_dir }}"
+
+- name: Write application environment file
+  ansible.builtin.template:
+    src: homestay.env.j2
+    dest: "{{ app_config_dir }}/homestay.env"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0640"
+
+- name: Write node information file
+  ansible.builtin.template:
+    src: node-info.txt.j2
+    dest: "{{ app_base_dir }}/NODE-INFO.txt"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0644"
+
+- name: Allow application port through ufw
+  community.general.ufw:
+    rule: allow
+    port: "{{ app_host_port | string }}"
+    proto: tcp
+  when: firewall_enabled | bool

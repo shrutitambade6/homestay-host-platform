@@ -1,0 +1,31 @@
+---
+# Task 14 - Manual rollback to the previous stable release recorded on the node
+# Run:  ansible-playbook playbooks/rollback.yml
+- name: Roll back Homestay to the previous release
+  hosts: homestay_nodes
+  become: true
+  tasks:
+    - name: Read previous release
+      ansible.builtin.slurp:
+        src: "{{ app_release_dir }}/previous"
+      register: previous_raw
+      failed_when: false
+
+    - name: Stop if there is nothing to roll back to
+      ansible.builtin.fail:
+        msg: "No previous release recorded in {{ app_release_dir }}/previous"
+      when: previous_raw.content is not defined
+
+    - name: Choose rollback target
+      ansible.builtin.set_fact:
+        rollback_to: "{{ previous_raw.content | b64decode | trim }}"
+
+    - name: Announce rollback
+      ansible.builtin.debug:
+        msg: "Rolling back to {{ app_image_repo }}:{{ rollback_to }}"
+
+    - name: Redeploy previous release
+      ansible.builtin.include_role:
+        name: homestay_app
+      vars:
+        app_version: "{{ rollback_to }}"

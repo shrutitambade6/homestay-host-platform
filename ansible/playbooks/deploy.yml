@@ -1,0 +1,8 @@
+---
+# Task 14 - Deploy a container release with health check and automatic rollback
+# Run:  ansible-playbook playbooks/deploy.yml -e app_version=1.0.7
+- name: Deploy Homestay container release
+  hosts: homestay_nodes
+  become: true
+  roles:
+    - homestay_app
