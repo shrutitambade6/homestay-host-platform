@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body class="login-page">
+<main class="login-card">
+    <h1>🏡 Homestay Host</h1>
+    <p class="muted">Sign in to manage your properties and bookings</p>
+
+    <div id="login-error" class="flash error" th:if="${param.error}">Invalid username or password</div>
+    <div id="logout-msg" class="flash success" th:if="${param.logout}">You have been signed out</div>
+
+    <form th:action="@{/login}" method="post" id="login-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" autofocus required>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit" id="login-btn" class="btn btn-primary wide">Sign in</button>
+    </form>
+
+    <details class="demo-users">
+        <summary>Demo accounts</summary>
+        <table>
+            <tr><th>User</th><th>Password</th><th>Role</th></tr>
+            <tr><td>host</td><td>host123</td><td>Host – confirm / cancel, manage properties</td></tr>
+            <tr><td>staff</td><td>staff123</td><td>Staff – check in / check out</td></tr>
+            <tr><td>admin</td><td>admin123</td><td>Admin – everything</td></tr>
+        </table>
+    </details>
+</main>
+</body>
+</html>

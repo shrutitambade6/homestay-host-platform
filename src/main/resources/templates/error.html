@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error · Homestay Host</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container narrow">
+    <section class="card">
+        <h1 id="error-title" th:text="${status} + ' – ' + ${error}">Error</h1>
+        <p class="muted" th:text="${message}">Something went wrong.</p>
+        <a th:href="@{/}" class="btn btn-primary">Back to dashboard</a>
+    </section>
+</main>
+</body>
+</html>

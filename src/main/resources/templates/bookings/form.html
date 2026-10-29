@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head((${booking == null} ? 'New booking' : 'Edit booking'))}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('bookings')}"></nav>
+<main class="container narrow">
+    <h1 id="page-title" th:text="${booking == null} ? 'New booking' : 'Edit booking ' + ${booking.bookingRef}">New booking</h1>
+
+    <form class="card form" id="booking-form" method="post" th:object="${form}"
+          th:action="${booking == null} ? @{/bookings} : @{/bookings/{id}(id=${booking.id})}">
+
+        <div class="flash error" id="form-errors" th:if="${#fields.hasErrors('*')}">Please fix the highlighted fields.</div>
+
+        <label for="guestName">Guest name *</label>
+        <input type="text" th:field="*{guestName}" th:errorclass="invalid">
+        <span class="field-error" th:if="${#fields.hasErrors('guestName')}" th:errors="*{guestName}"></span>
+
+        <div class="row">
+            <div>
+                <label for="guestPhone">Phone (10 digits) *</label>
+                <input type="text" th:field="*{guestPhone}" th:errorclass="invalid" maxlength="10">
+                <span class="field-error" id="err-guestPhone" th:if="${#fields.hasErrors('guestPhone')}" th:errors="*{guestPhone}"></span>
+            </div>
+            <div>
+                <label for="guestEmail">Email</label>
+                <input type="email" th:field="*{guestEmail}" th:errorclass="invalid">
+                <span class="field-error" th:if="${#fields.hasErrors('guestEmail')}" th:errors="*{guestEmail}"></span>
+            </div>
+        </div>
+
+        <label for="propertyId">Property *</label>
+        <select th:field="*{propertyId}" th:errorclass="invalid">
+            <option value="">-- select --</option>
+            <option th:each="p : ${properties}" th:value="${p.id}"
+                    th:text="${p.name} + ' (' + ${p.location} + ') – ₹' + ${p.pricePerNight} + '/night'">Property</option>
+        </select>
+        <span class="field-error" th:if="${#fields.hasErrors('propertyId')}" th:errors="*{propertyId}"></span>
+
+        <div class="row">
+            <div>
+                <label for="checkIn">Check-in *</label>
+                <input type="date" th:field="*{checkIn}" th:errorclass="invalid">
+                <span class="field-error" th:if="${#fields.hasErrors('checkIn')}" th:errors="*{checkIn}"></span>
+            </div>
+            <div>
+                <label for="checkOut">Check-out *</label>
+                <input type="date" th:field="*{checkOut}" th:errorclass="invalid">
+                <span class="field-error" id="err-checkOut" th:if="${#fields.hasErrors('checkOut')}" th:errors="*{checkOut}"></span>
+            </div>
+            <div>
+                <label for="guests">Guests *</label>
+                <input type="number" th:field="*{guests}" min="1" max="20" th:errorclass="invalid">
+                <span class="field-error" th:if="${#fields.hasErrors('guests')}" th:errors="*{guests}"></span>
+            </div>
+        </div>
+
+        <label for="notes">Notes</label>
+        <textarea th:field="*{notes}" rows="3"></textarea>
+
+        <div class="actions">
+            <button type="submit" id="save-btn" class="btn btn-primary">Save booking</button>
+            <a th:href="${booking == null} ? @{/bookings} : @{/bookings/{id}(id=${booking.id})}" class="btn btn-ghost" id="cancel-link">Cancel</a>
+        </div>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

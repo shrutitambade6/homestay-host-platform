@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Homestay Host'">Homestay Host</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+
+<body>
+
+<nav th:fragment="nav(active)" class="topbar">
+    <a class="brand" th:href="@{/}" id="nav-brand">🏡 Homestay Host</a>
+    <div class="links">
+        <a id="nav-bookings" th:href="@{/bookings}" th:classappend="${active == 'bookings'} ? 'active'">Bookings</a>
+        <a id="nav-properties" th:href="@{/properties}" th:classappend="${active == 'properties'} ? 'active'">Properties</a>
+    </div>
+    <div class="user" sec:authorize="isAuthenticated()">
+        <span id="current-user" sec:authentication="name">user</span>
+        <span class="role-chip" id="current-role"
+              th:text="${#strings.replace(#strings.listJoin(#authentication.authorities, ','), 'ROLE_', '')}">ROLE</span>
+        <form th:action="@{/logout}" method="post" class="inline">
+            <button type="submit" id="logout-btn" class="btn btn-ghost">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div th:fragment="flash">
+    <div id="flash-success" class="flash success" th:if="${success}" th:text="${success}">ok</div>
+    <div id="flash-error" class="flash error" th:if="${error}" th:text="${error}">error</div>
+</div>
+
+<footer th:fragment="footer" class="footer">
+    Homestay Host Management Platform ·
+    <span id="app-version" th:text="'v' + ${appVersion}">v1.0.0</span> ·
+    env: <span id="app-env" th:text="${appEnv}">dev</span>
+</footer>
+
+</body>
+</html>
