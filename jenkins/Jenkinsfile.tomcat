@@ -1,0 +1,64 @@
+// =============================================================================
+// Task 8 - Pipeline as Code: checkout -> build -> package -> deploy to Tomcat
+// Create a Pipeline job with "Pipeline script from SCM" and Script Path = jenkins/Jenkinsfile.tomcat
+// (The root Jenkinsfile is the final pipeline that adds Selenium + Docker.)
+// =============================================================================
+
+def run(String cmd) {
+    if (isUnix()) { sh cmd } else { bat cmd }
+}
+
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK17'
+        maven 'Maven3'
+    }
+
+    parameters {
+        choice(name: 'APP_ENV', choices: ['dev', 'staging', 'prod'],
+               description: 'Environment label shown in the app footer and /api/version')
+        string(name: 'TOMCAT_WEBAPPS', defaultValue: 'C:\\apache-tomcat-10.1\\webapps',
+               description: 'Tomcat webapps folder')
+        string(name: 'TOMCAT_URL', defaultValue: 'http://localhost:8080/homestay',
+               description: 'Deployed application URL')
+    }
+
+    options { timestamps() }
+
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+        stage('Build') {
+            steps { run "mvn -B clean compile -Dapp.env=${params.APP_ENV}" }
+        }
+        stage('Package') {
+            steps {
+                run "mvn -B package -Dapp.env=${params.APP_ENV}"
+                archiveArtifacts artifacts: 'target/homestay.war', fingerprint: true
+            }
+            post {
+                always { junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true }
+            }
+        }
+        stage('Deploy to Tomcat') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh "cp target/homestay.war '${params.TOMCAT_WEBAPPS}/homestay.war'"
+                    } else {
+                        bat "copy /Y target\\homestay.war \"${params.TOMCAT_WEBAPPS}\\homestay.war\""
+                    }
+                }
+                sleep time: 20, unit: 'SECONDS'
+                script {
+                    if (isUnix()) { sh "curl -fsS ${params.TOMCAT_URL}/api/version" }
+                    else          { bat "curl -fsS ${params.TOMCAT_URL}/api/version" }
+                }
+                echo "Application deployed: ${params.TOMCAT_URL}  (env=${params.APP_ENV})"
+            }
+        }
+    }
+}
