@@ -125,9 +125,11 @@ pipeline {
                         bat "copy /Y target\\homestay.war \"${params.TOMCAT_WEBAPPS}\\homestay.war\""
                     }
                 }
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitUntil(initialRecurrencePeriod: 5000) {
-                        runStatus("curl -fsS ${params.TOMCAT_URL}/api/version") == 0
+                script {
+                    timeout(time: 3, unit: 'MINUTES') {
+                        waitUntil(initialRecurrencePeriod: 5000) {
+                            runStatus("curl -fsS ${params.TOMCAT_URL}/api/version") == 0
+                        }
                     }
                 }
                 echo "Deployed to Tomcat: ${params.TOMCAT_URL}"
@@ -164,7 +166,7 @@ pipeline {
             when { expression { params.DOCKER_DEPLOY } }
             steps {
                 // Remove the old container (ignore "no such container" on the first run)
-                runStatus("docker rm -f ${env.CONTAINER_NAME}")
+                script { runStatus("docker rm -f ${env.CONTAINER_NAME}") }
                 runCmd "docker run -d --name ${env.CONTAINER_NAME} --restart unless-stopped -p ${params.CONTAINER_PORT}:8080 -v homestay-data:/app/data ${params.DOCKER_REPO}:${env.IMAGE_TAG}"
             }
         }
@@ -172,9 +174,11 @@ pipeline {
         stage('Smoke Test') {
             when { expression { params.DOCKER_DEPLOY } }
             steps {
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitUntil(initialRecurrencePeriod: 5000) {
-                        runStatus("curl -fsS http://localhost:${params.CONTAINER_PORT}/actuator/health") == 0
+                script {
+                    timeout(time: 3, unit: 'MINUTES') {
+                        waitUntil(initialRecurrencePeriod: 5000) {
+                            runStatus("curl -fsS http://localhost:${params.CONTAINER_PORT}/actuator/health") == 0
+                        }
                     }
                 }
                 runCmd "curl -fsS http://localhost:${params.CONTAINER_PORT}/api/version"
