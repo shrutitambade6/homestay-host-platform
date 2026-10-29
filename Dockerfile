@@ -6,8 +6,11 @@
 #   docker run -d --name homestay-app -p 8085:8080 -v homestay-data:/app/data homestay-host-platform:1.0.0
 # ---------------------------------------------------------------------------
 
+# Base images come from mirror.gcr.io (Google's cache of Docker Hub official images):
+# same images, but no auth.docker.io token request, which fails on some ISP IPv6 routes.
+
 # ---------- Stage 1: build ----------
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM mirror.gcr.io/library/maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 # Copy the POM first so dependency downloads are cached between builds
 COPY pom.xml .
@@ -17,7 +20,7 @@ ARG APP_ENV=docker
 RUN mvn -B -q package -DskipTests -Dapp.env=${APP_ENV}
 
 # ---------- Stage 2: runtime ----------
-FROM eclipse-temurin:17-jre
+FROM mirror.gcr.io/library/eclipse-temurin:17-jre
 
 LABEL org.opencontainers.image.title="homestay-host-platform" \
       org.opencontainers.image.description="Containerized Homestay Host Management Platform" \
