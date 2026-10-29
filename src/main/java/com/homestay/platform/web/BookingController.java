@@ -1,6 +1,7 @@
 package com.homestay.platform.web;
 
 import com.homestay.platform.model.Booking;
+import com.homestay.platform.model.BookingAction;
 import com.homestay.platform.model.BookingStatus;
 import com.homestay.platform.service.BookingService;
 import com.homestay.platform.service.PropertyService;
@@ -65,9 +66,10 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    public String view(@PathVariable Long id, Model model) {
+    public String view(@PathVariable Long id, Authentication auth, Model model) {
         Booking b = bookingService.get(id);
         model.addAttribute("booking", b);
+        model.addAttribute("actions", bookingService.availableActions(b, CurrentUser.roles(auth)));
         return "bookings/view";
     }
 
@@ -93,6 +95,20 @@ public class BookingController {
         try {
             Booking saved = bookingService.update(id, form, auth.getName());
             flash.addFlashAttribute("success", "Booking " + saved.getBookingRef() + " updated");
+        } catch (WorkflowException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/bookings/" + id;
+    }
+
+    /** Role-based status change, e.g. POST /bookings/3/status?action=CONFIRM */
+    @PostMapping("/{id}/status")
+    public String changeStatus(@PathVariable Long id, @RequestParam BookingAction action,
+                               Authentication auth, RedirectAttributes flash) {
+        try {
+            Booking b = bookingService.applyAction(id, action, CurrentUser.roles(auth), auth.getName());
+            flash.addFlashAttribute("success", "Booking " + b.getBookingRef() + " is now "
+                    + b.getStatus().getLabel().toLowerCase());
         } catch (WorkflowException e) {
             flash.addFlashAttribute("error", e.getMessage());
         }

@@ -6,12 +6,16 @@ A containerized web platform for homestay hosts and staff to manage properties a
 
 ## Status
 
-Project skeleton – features are developed on `feature/*` branches (see CONTRIBUTING.md).
+MVP complete: bookings, search, role-based workflow and dashboard.
 
 ## Run locally
 
-Build with `mvn package` and start with `mvn spring-boot:run`.
-The app will listen on port 8080.
+```powershell
+mvn clean package
+java -jar target\\homestay.war
+```
+
+Open http://localhost:8080 – demo users: `host/host123`, `staff/staff123`, `admin/admin123`.
 
 ## Documentation
 
