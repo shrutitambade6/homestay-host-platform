@@ -13,7 +13,7 @@
 
     <form class="search card" th:action="@{/bookings}" method="get" id="search-form">
         <input type="text" id="search-q" name="q" th:value="${q}" placeholder="Guest name, phone or booking ref">
-        <select id="search-status" name="state">
+        <select id="search-status" name="status">
             <option value="">All statuses</option>
             <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
                     th:selected="${s == status}">Pending</option>
