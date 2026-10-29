@@ -44,7 +44,9 @@ class WebSecurityTest {
 
     @Test
     @WithMockUser(username = "host", roles = "HOST")
-    void hostSeesBookings() throws Exception {
+    void hostSeesDashboardAndBookings() throws Exception {
+        mvc.perform(get("/")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Total bookings")));
         mvc.perform(get("/bookings")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("bookings-table")));
     }

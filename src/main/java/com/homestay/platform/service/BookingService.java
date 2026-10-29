@@ -13,20 +13,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @Transactional
 public class BookingService {
 
+    /** Statuses that count as revenue and occupy a room. */
+    static final Set<BookingStatus> ACTIVE_STATUSES =
+            EnumSet.of(BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN, BookingStatus.CHECKED_OUT);
+    static final Set<BookingStatus> OCCUPYING_STATUSES =
+            EnumSet.of(BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN);
+    static final Set<BookingStatus> UPCOMING_STATUSES =
+            EnumSet.of(BookingStatus.PENDING, BookingStatus.CONFIRMED);
+
     private final BookingRepository bookings;
     private final PropertyRepository properties;
+    private final Clock clock;
 
-    public BookingService(BookingRepository bookings, PropertyRepository properties) {
+    public BookingService(BookingRepository bookings, PropertyRepository properties, Clock clock) {
         this.bookings = bookings;
         this.properties = properties;
+        this.clock = clock;
     }
 
     // ---------------------------------------------------------------- create / update / read
@@ -106,5 +122,31 @@ public class BookingService {
         return Arrays.stream(BookingAction.values())
                 .filter(a -> a.isAvailable(b.getStatus(), roles))
                 .toList();
+    }
+
+    // ---------------------------------------------------------------- dashboard
+
+    @Transactional(readOnly = true)
+    public DashboardSummary dashboard() {
+        LocalDate today = LocalDate.now(clock);
+        Map<BookingStatus, Long> counts = new EnumMap<>(BookingStatus.class);
+        for (BookingStatus s : BookingStatus.values()) {
+            counts.put(s, bookings.countByStatus(s));
+        }
+        long totalRooms = properties.totalActiveRooms();
+        long occupied = bookings.countOccupying(today, OCCUPYING_STATUSES);
+        int occupancy = totalRooms == 0 ? 0 : (int) Math.min(100, Math.round(occupied * 100.0 / totalRooms));
+
+        return new DashboardSummary(
+                bookings.count(),
+                counts,
+                bookings.countArrivals(today, UPCOMING_STATUSES),
+                counts.get(BookingStatus.CHECKED_IN),
+                bookings.sumAmountByStatusIn(ACTIVE_STATUSES),
+                properties.countByActiveTrue(),
+                totalRooms,
+                occupied,
+                occupancy,
+                bookings.findUpcoming(today, UPCOMING_STATUSES, PageRequest.of(0, 5)));
     }
 }

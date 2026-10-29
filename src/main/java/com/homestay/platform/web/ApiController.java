@@ -3,6 +3,7 @@ package com.homestay.platform.web;
 import com.homestay.platform.model.Booking;
 import com.homestay.platform.model.BookingStatus;
 import com.homestay.platform.service.BookingService;
+import com.homestay.platform.service.DashboardSummary;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,6 +51,18 @@ public class ApiController {
     @GetMapping("/bookings/{id}")
     public BookingDto booking(@PathVariable Long id) {
         return BookingDto.of(bookingService.get(id));
+    }
+
+    @GetMapping("/dashboard")
+    public Map<String, Object> dashboard() {
+        DashboardSummary s = bookingService.dashboard();
+        return Map.of(
+                "totalBookings", s.totalBookings(),
+                "countsByStatus", s.countsByStatus(),
+                "todaysCheckIns", s.todaysCheckIns(),
+                "guestsInHouse", s.guestsInHouse(),
+                "revenue", s.revenue(),
+                "occupancyPercent", s.occupancyPercent());
     }
 
     public record BookingDto(Long id, String bookingRef, String guestName, String guestPhone,

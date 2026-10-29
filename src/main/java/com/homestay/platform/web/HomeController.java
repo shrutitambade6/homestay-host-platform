@@ -1,19 +1,29 @@
 package com.homestay.platform.web;
 
+import com.homestay.platform.model.BookingStatus;
+import com.homestay.platform.service.BookingService;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class HomeController {
+
+    private final BookingService bookingService;
+
+    public HomeController(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
 
     @GetMapping("/login")
     public String login() {
         return "login";
     }
 
-    /** The dashboard arrives in feature/workflow-dashboard; until then start on the bookings list. */
     @GetMapping("/")
-    public String home() {
-        return "redirect:/bookings";
+    public String dashboard(Model model) {
+        model.addAttribute("summary", bookingService.dashboard());
+        model.addAttribute("statuses", BookingStatus.values());
+        return "dashboard";
     }
 }

@@ -13,6 +13,7 @@
 <nav th:fragment="nav(active)" class="topbar">
     <a class="brand" th:href="@{/}" id="nav-brand">🏡 Homestay Host</a>
     <div class="links">
+        <a id="nav-dashboard" th:href="@{/}" th:classappend="${active == 'dashboard'} ? 'active'">Dashboard</a>
         <a id="nav-bookings" th:href="@{/bookings}" th:classappend="${active == 'bookings'} ? 'active'">Bookings</a>
         <a id="nav-properties" th:href="@{/properties}" th:classappend="${active == 'properties'} ? 'active'">Properties</a>
     </div>

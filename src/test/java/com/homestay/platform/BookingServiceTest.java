@@ -7,6 +7,7 @@ import com.homestay.platform.model.Property;
 import com.homestay.platform.model.Role;
 import com.homestay.platform.repository.PropertyRepository;
 import com.homestay.platform.service.BookingService;
+import com.homestay.platform.service.DashboardSummary;
 import com.homestay.platform.service.WorkflowException;
 import com.homestay.platform.web.dto.BookingForm;
 import org.junit.jupiter.api.Test;
@@ -119,4 +120,14 @@ class BookingServiceTest {
                 .isInstanceOf(WorkflowException.class);
     }
 
+    @Test
+    void dashboardReflectsSeededData() {
+        DashboardSummary s = service.dashboard();
+
+        assertThat(s.totalBookings()).isGreaterThanOrEqualTo(6);
+        assertThat(s.activeProperties()).isGreaterThanOrEqualTo(3);
+        assertThat(s.guestsInHouse()).isGreaterThanOrEqualTo(1);
+        assertThat(s.revenue()).isPositive();
+        assertThat(s.occupancyPercent()).isBetween(0, 100);
+    }
 }
