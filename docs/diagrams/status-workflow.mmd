@@ -1,0 +1,10 @@
+stateDiagram-v2
+    [*] --> PENDING : create (any role)
+    PENDING --> CONFIRMED : CONFIRM (Host, Admin)
+    PENDING --> CANCELLED : CANCEL (Host, Admin)
+    CONFIRMED --> CHECKED_IN : CHECK_IN (Staff, Host, Admin)
+    CONFIRMED --> CANCELLED : CANCEL (Host, Admin)
+    CHECKED_IN --> CHECKED_OUT : CHECK_OUT (Staff, Host, Admin)
+    CHECKED_OUT --> [*]
+    CANCELLED --> [*]
+    note right of CONFIRMED : editable while PENDING or CONFIRMED

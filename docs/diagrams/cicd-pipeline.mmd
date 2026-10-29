@@ -1,0 +1,11 @@
+flowchart LR
+    G["git push<br/>GitHub"] -->|pollSCM| A["Checkout"]
+    A --> B["Build<br/>mvn compile"] --> U["Unit tests<br/>JUnit report"] --> P["Package<br/>archive WAR"]
+    P --> S{"Selenium<br/>quality gate"}
+    S -->|fail| X["Pipeline FAILED<br/>deploy skipped<br/>screenshots archived"]
+    S -->|pass| T["Deploy WAR<br/>to Tomcat"]
+    T --> DB["Docker build<br/>repo:1.0.BUILD"] --> DP["Push to<br/>Docker Hub"] --> DC["Run fresh<br/>container"] --> SM["Smoke test<br/>/actuator/health"]
+    SM --> AN["Ansible deploy<br/>to target node"]
+    style X fill:#f8e0dc,stroke:#9c2f1e
+    style S fill:#fff1d6,stroke:#8a5a00
+    style SM fill:#dff1e6,stroke:#1f6a3d

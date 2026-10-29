@@ -1,0 +1,29 @@
+# Build output
+target/
+*.war
+*.jar
+!**/src/**/*.jar
+
+# Local H2 database
+data/
+*.mv.db
+*.trace.db
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Ansible
+*.retry

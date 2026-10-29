@@ -1,0 +1,28 @@
+gitGraph
+    commit id: "skeleton"
+    branch develop
+    checkout develop
+    branch feature/booking-management
+    checkout feature/booking-management
+    commit id: "entities"
+    commit id: "booking CRUD"
+    commit id: "search"
+    checkout develop
+    commit id: "README run steps"
+    merge feature/booking-management id: "PR #1"
+    branch feature/workflow-dashboard
+    checkout feature/workflow-dashboard
+    commit id: "status workflow"
+    commit id: "dashboard"
+    checkout develop
+    merge feature/workflow-dashboard id: "PR #2 (conflict fixed)"
+    checkout main
+    merge develop id: "release" tag: "v1.0.0"
+    checkout develop
+    branch feature/cicd-devops
+    commit id: "Jenkins + Selenium"
+    commit id: "Docker + Ansible"
+    checkout develop
+    merge feature/cicd-devops id: "PR #3"
+    checkout main
+    merge develop tag: "v1.1.0"

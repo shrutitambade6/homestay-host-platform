@@ -1,0 +1,20 @@
+flowchart TB
+    BR["Web browser<br/>Host · Staff · Admin"]
+    subgraph APP["Spring Boot 3 application — homestay.war"]
+        direction TB
+        SEC["Spring Security<br/>form login · role checks"]
+        WEB["Controllers<br/>Thymeleaf pages · REST /api · Actuator /health"]
+        SVC["Services<br/>BookingService · PropertyService<br/>status workflow · dashboard"]
+        REPO["Spring Data JPA repositories"]
+        SEC --> WEB --> SVC --> REPO
+    end
+    DB[("H2 database<br/>file on disk / Docker volume")]
+    BR -->|HTTP :8080 / :8085| SEC
+    REPO --> DB
+    subgraph RUN["Runs on"]
+        direction LR
+        TC["Apache Tomcat 10.1<br/>localhost:8080/homestay"]
+        DK["Docker container<br/>localhost:8085"]
+        NODE["Ubuntu node<br/>provisioned by Ansible"]
+    end
+    DB ~~~ RUN

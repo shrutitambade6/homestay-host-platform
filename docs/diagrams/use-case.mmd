@@ -1,0 +1,19 @@
+%% Rendered use-case.png is drawn by hand (UML style); this Mermaid version is a text fallback.
+flowchart LR
+    Staff(["👤 Staff"])
+    Host(["👤 Host"])
+    Admin(["👤 Admin<br/>(all Host rights)"])
+    subgraph SYS["Homestay Host Management Platform"]
+        direction TB
+        UC1(["Log in / log out"])
+        UC2(["View summary dashboard"])
+        UC3(["Create booking"])
+        UC4(["View / update booking"])
+        UC5(["Search bookings"])
+        UC7(["Check guest in / out"])
+        UC6(["Confirm / cancel booking"])
+        UC8(["Add / edit properties"])
+    end
+    Staff --> UC1 & UC2 & UC3 & UC4 & UC5 & UC7
+    Host --> UC1 & UC2 & UC3 & UC4 & UC5 & UC7 & UC6 & UC8
+    Admin --> UC6 & UC8

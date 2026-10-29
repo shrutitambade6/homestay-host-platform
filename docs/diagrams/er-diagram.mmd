@@ -1,0 +1,28 @@
+erDiagram
+    PROPERTY ||--o{ BOOKING : "has"
+    PROPERTY {
+        bigint id PK
+        varchar name
+        varchar location
+        int total_rooms
+        decimal price_per_night
+        boolean active
+    }
+    BOOKING {
+        bigint id PK
+        varchar booking_ref UK
+        varchar guest_name
+        varchar guest_phone
+        varchar guest_email
+        bigint property_id FK
+        date check_in
+        date check_out
+        int guests
+        decimal total_amount
+        varchar status
+        varchar notes
+        varchar created_by
+        varchar last_updated_by
+        timestamp created_at
+        timestamp updated_at
+    }

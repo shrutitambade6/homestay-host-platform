@@ -1,0 +1,13 @@
+flowchart LR
+    P["1 PLAN<br/>GitHub Issues · Kanban<br/>user stories"] --> C["2 CODE<br/>Git · feature branches<br/>pull requests"]
+    C --> B["3 BUILD<br/>Maven · Jenkins CI<br/>homestay.war"]
+    B --> T["4 TEST<br/>JUnit · MockMvc<br/>Selenium quality gate"]
+    T --> R["5 RELEASE<br/>Git tag · versioned<br/>Docker image"]
+    R --> D["6 DEPLOY<br/>Tomcat · Docker<br/>Jenkins CD"]
+    D --> O["7 OPERATE<br/>Ansible provisioning<br/>rollback"]
+    O --> M["8 MONITOR<br/>/actuator/health<br/>logs · smoke tests"]
+    M -->|feedback / new issues| P
+    classDef dev fill:#e3f1ea,stroke:#2f6b4f,color:#1f2a24
+    classDef ops fill:#e4ecfb,stroke:#1d4f9c,color:#1f2a24
+    class P,C,B,T dev
+    class R,D,O,M ops
