@@ -34,7 +34,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 // Explicit ant matchers: safe on external Tomcat, which registers extra servlets
-                .requestMatchers(antMatcher("/login"), antMatcher("/css/**"), antMatcher("/js/**"),
+                .requestMatchers(antMatcher("/login"), antMatcher("/css/**"), antMatcher("/js/**"), antMatcher("/img/**"),
                         antMatcher("/favicon.ico"), antMatcher("/error")).permitAll()
                 .requestMatchers(antMatcher("/actuator/health/**"), antMatcher("/actuator/info"),
                         antMatcher("/api/version")).permitAll()

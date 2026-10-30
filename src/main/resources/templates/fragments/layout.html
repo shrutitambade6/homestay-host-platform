@@ -18,7 +18,7 @@
         <a id="nav-bookings" th:href="@{/bookings}" th:classappend="${active == 'bookings'} ? 'active'">Bookings</a>
         <a id="nav-properties" th:href="@{/properties}" th:classappend="${active == 'properties'} ? 'active'">Properties</a>
     </div>
-    <label th:replace="~{fragments/layout :: themePicker}"></label>
+    <div th:replace="~{fragments/layout :: themePicker}"></div>
     <div class="user" sec:authorize="isAuthenticated()">
         <span id="current-user" sec:authentication="name">user</span>
         <span class="role-chip" id="current-role"
@@ -29,16 +29,35 @@
     </div>
 </nav>
 
-<label th:fragment="themePicker" class="theme-picker" for="theme-select">
-    <span class="sr-only">Colour theme</span>
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"></path></svg>
-    <select id="theme-select" class="theme-select">
-        <option value="forest">Forest</option>
-        <option value="ocean">Ocean</option>
-        <option value="sunset">Sunset</option>
-        <option value="dark">Dark</option>
-    </select>
-</label>
+<div th:fragment="themePicker" class="theme-picker" data-theme-picker>
+    <button type="button" class="theme-btn" id="theme-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="theme-menu">
+        <span class="thumb thumb-forest" data-current-thumb aria-hidden="true"></span>
+        <span class="label"><span class="sr-only">Colour theme: </span><span data-current-name>Forest</span></span>
+        <svg class="chev" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+    </button>
+    <ul class="theme-menu" id="theme-menu" role="listbox" aria-label="Colour theme" hidden>
+        <li role="option" class="theme-option" id="theme-opt-forest" data-value="forest" aria-selected="false" tabindex="-1">
+            <span class="thumb thumb-forest" aria-hidden="true"></span>
+            <span><span class="name"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 13h4l-3 5h12l-3-5h4z"></path><path d="M12 18v3"></path></svg>Forest</span><span class="swatches" aria-hidden="true"><i style="background:#173D2B"></i><i style="background:#2E6748"></i><i style="background:#A3C98B"></i></span></span>
+            <svg class="check" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </li>
+        <li role="option" class="theme-option" id="theme-opt-ocean" data-value="ocean" aria-selected="false" tabindex="-1">
+            <span class="thumb thumb-ocean" aria-hidden="true"></span>
+            <span><span class="name"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"></path><path d="M2 17c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"></path></svg>Ocean</span><span class="swatches" aria-hidden="true"><i style="background:#073B59"></i><i style="background:#087E9B"></i><i style="background:#65D6E8"></i></span></span>
+            <svg class="check" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </li>
+        <li role="option" class="theme-option" id="theme-opt-sunset" data-value="sunset" aria-selected="false" tabindex="-1">
+            <span class="thumb thumb-sunset" aria-hidden="true"></span>
+            <span><span class="name"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v3M5.6 7.6l2.1 2.1M18.4 7.6l-2.1 2.1M3 15h18M7 15a5 5 0 0 1 10 0M5 19h14"></path></svg>Sunset</span><span class="swatches" aria-hidden="true"><i style="background:#572D42"></i><i style="background:#A84D45"></i><i style="background:#FFB36B"></i></span></span>
+            <svg class="check" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </li>
+        <li role="option" class="theme-option" id="theme-opt-dark" data-value="dark" aria-selected="false" tabindex="-1">
+            <span class="thumb thumb-dark" aria-hidden="true"></span>
+            <span><span class="name"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>Dark</span><span class="swatches" aria-hidden="true"><i style="background:#080E1C"></i><i style="background:#121D35"></i><i style="background:#65A9FF"></i></span></span>
+            <svg class="check" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </li>
+    </ul>
+</div>
 
 <div th:fragment="flash">
     <div id="flash-success" class="flash success" th:if="${success}" th:text="${success}">ok</div>
