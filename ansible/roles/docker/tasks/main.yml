@@ -25,6 +25,7 @@
   ansible.builtin.command: docker version --format '{{ "{{" }} .Server.Version {{ "}}" }}'
   register: docker_version
   changed_when: false
+  check_mode: false        # read-only, so also run it during --check
 
 - name: Show Docker version
   ansible.builtin.debug:
