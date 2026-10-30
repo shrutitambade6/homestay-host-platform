@@ -77,3 +77,12 @@ Dockerfile, docker-compose.yml        Container build and run
 ansible/                              Inventory, roles, playbooks
 docs/                                 Task documents and diagrams
 ```
+
+## Colour themes
+
+Pick **Forest**, **Ocean**, **Sunset** or **Dark** from the theme menu in the top bar (also on the sign-in page). The choice is saved in the browser, and the first visit follows the system light/dark setting.
+
+- `static/css/app.css`: one block of CSS variables per theme (palette, background overlay, glass surfaces, status colours).
+- `static/img/themes/*.svg`: original background illustrations (forest, ocean, sunset, night), 3–15 KB each, also used as the menu thumbnails.
+- `static/js/theme.js`: applies the saved theme before the page paints; runs the accessible theme menu (mouse, touch, keyboard).
+- **Using photos instead:** add e.g. `static/img/themes/forest.webp` and point that theme's `--scene` at it. The overlay keeps text readable, and `--fallback` shows if the image is missing.
