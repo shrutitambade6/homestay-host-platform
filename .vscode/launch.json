@@ -1,0 +1,14 @@
+{
+  // Run > Start Debugging (F5). Needs the "Extension Pack for Java" extension.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Homestay app (port 8081)",
+      "request": "launch",
+      "mainClass": "com.homestay.platform.HomestayApplication",
+      "projectName": "homestay-host-platform",
+      "args": "--server.port=8081"
+    }
+  ]
+}

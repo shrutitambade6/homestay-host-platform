@@ -1,0 +1,7 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.jdt.ls.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot",
+  "maven.executable.path": "C:\\tools\\apache-maven-3.10.0\\bin\\mvn.cmd",
+  "files.associations": { "Jenkinsfile*": "groovy", "**/ansible/**/*.yml": "ansible" },
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
+}

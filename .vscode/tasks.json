@@ -1,0 +1,60 @@
+{
+  // Terminal > Run Task... (or Ctrl+Shift+P > "Tasks: Run Task")
+  "version": "2.0.0",
+  "options": {
+    "env": {
+      "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot",
+      "PATH": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot\\bin;C:\\tools\\apache-maven-3.10.0\\bin;${env:PATH}"
+    }
+  },
+  "tasks": [
+    {
+      "label": "1. Run app (http://localhost:8081)",
+      "type": "shell",
+      "command": "mvn -B spring-boot:run \"-Dspring-boot.run.arguments=--server.port=8081\"",
+      "isBackground": true,
+      "problemMatcher": { "owner": "spring", "pattern": { "regexp": "^x^" },
+        "background": { "activesBegin": ".", "beginsPattern": "Scanning for projects", "endsPattern": "Started HomestayApplication|Started .* in" } },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "2. Unit tests (21)",
+      "type": "shell",
+      "command": "mvn -B test",
+      "group": { "kind": "test", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "3. Selenium tests (9, visible Chrome)",
+      "type": "shell",
+      "command": "mvn -B verify -Pselenium -DskipUTs=true -Dheadless=false",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "4. Package WAR",
+      "type": "shell",
+      "command": "mvn -B clean package -DskipTests",
+      "group": "build"
+    },
+    {
+      "label": "5. Docker: show containers and registry tags",
+      "type": "shell",
+      "command": "docker ps; docker images localhost:5000/homestay-host-platform; curl.exe -s http://localhost:5000/v2/homestay-host-platform/tags/list",
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "6. Docker lifecycle demo (Task 11)",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts\\docker-lifecycle.ps1",
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "7. Ansible idempotency check (Ubuntu)",
+      "type": "shell",
+      "command": "wsl -d Ubuntu-24.04 -u root -- bash -lc \"cd /home/shrutitambade6/homestay-ansible && ansible-playbook playbooks/configure.yml -e app_image_repo=homestay-host-platform -e docker_install=true -e app_container_name=homestay-node -e app_data_volume=homestay-node-data\"",
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    }
+  ]
+}
