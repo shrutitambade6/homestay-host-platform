@@ -14,7 +14,7 @@
 
 ## Abstract
 
-Small homestay owners manage bookings over WhatsApp, phone calls and paper registers, which leads to double bookings, missed check-ins and no clear view of the business. This project delivers a **Homestay Host Management Platform**: a Spring Boot web application where hosts and staff create, view, update and search bookings, move them through a **role-based status workflow**, and monitor a **summary dashboard**. The application is developed and operated with a complete DevOps toolchain. **Git/GitHub** provides branching, pull requests and tagged releases. **Jenkins** runs a declarative pipeline that builds with **Maven**, runs unit tests and a **Selenium** UI quality gate, and deploys to **Apache Tomcat**. The pipeline then packages a versioned **Docker** image, publishes it to Docker Hub and replaces the running container. **Ansible** provisions a clean Ubuntu node, deploys the container idempotently, verifies health and rolls back automatically on failure.
+Small homestay owners manage bookings over WhatsApp, phone calls and paper registers, which leads to double bookings, missed check-ins and no clear view of the business. This project delivers a **Homestay Host Management Platform**: a Spring Boot web application where hosts and staff create, view, update and search bookings, move them through a **role-based status workflow**, and monitor a **summary dashboard**. The application is developed and operated with a complete DevOps toolchain. **Git/GitHub** provides branching, pull requests and tagged releases. **Jenkins** runs a declarative pipeline that builds with **Maven**, runs unit tests and a **Selenium** UI quality gate, and deploys to **Apache Tomcat**. The pipeline then packages a versioned **Docker** image, publishes it to a Docker registry (a local `registry:2` on port 5000; Docker Hub is a one-parameter switch) and replaces the running container. **Ansible** provisions a clean Ubuntu node, deploys the container idempotently, verifies health and rolls back automatically on failure.
 
 ---
 
@@ -72,7 +72,7 @@ A layered Spring Boot monolith (security → controllers → services → reposi
 | Cancel | Pending/Confirmed → Cancelled | Host, Admin |
 
 ### 3.5 Technology stack
-Java 17 · Spring Boot 3.3 (Web, Security, Data JPA, Validation, Actuator) · Thymeleaf · H2 · Maven 3.9 · Tomcat 10.1 · JUnit 5 / MockMvc / Selenium 4 · Git/GitHub · Jenkins · Docker / Docker Hub · Ansible (`community.docker`).
+Java 17 · Spring Boot 3.3 (Web, Security, Data JPA, Validation, Actuator) · Thymeleaf · H2 · Maven 3.9 · Tomcat 10.1 · JUnit 5 / MockMvc / Selenium 4 · Git/GitHub · Jenkins 2 (on Java 21) · Docker Desktop + `registry:2` · Ansible 2.16 on WSL2 Ubuntu 24.04 (`community.docker`).
 
 ---
 
@@ -105,12 +105,30 @@ A freestyle job `homestay-ci` polls GitHub (`H/5 * * * *`), runs `mvn clean pack
 Nine tests cover five critical journeys (`docs/09-selenium-test-plan.md`): login, booking creation and validation, edit and search, the cross-role workflow, and dashboard and permissions. Tests start the app on a random port, use explicit waits and stable ids, and save a screenshot on failure. In Jenkins, the **Selenium UI Tests** stage runs `mvn verify -Pselenium`. A failure stops the pipeline, so all deployment stages are skipped. A deliberate defect (renaming the status filter parameter) was caught, fixed and rerun successfully.
 
 ### 4.6 Docker (Tasks 11–12)
-Multi-stage Dockerfile (Maven build → Temurin 17 JRE), non-root user, volume for data, `HEALTHCHECK`. The final `Jenkinsfile` adds **Docker Build** (`repo:1.0.<build>` + `latest`), **Docker Push** (credential `dockerhub-creds`), **Deploy Container** (remove old, run new on port 8085) and **Smoke Test** (`/actuator/health`, `/api/version`).
+Multi-stage Dockerfile (Maven build → Temurin 17 JRE), non-root user, volume for data, `HEALTHCHECK`. The final `Jenkinsfile` adds **Docker Build** (`repo:1.0.<build>` + `latest`), **Start Local Registry** (`registry:2` on `localhost:5000`, started once and kept running), **Docker Push** (both tags; Docker Hub works by setting `DOCKER_REPO=<user>/homestay-host-platform` and adding credential `dockerhub-creds`), **Deploy Container** (remove old, run new on port 8085) and **Smoke Test** (`/actuator/health`, `/api/version`).
+
+Base images are pulled from `mirror.gcr.io` (Google's cache of the Docker Hub official images), because the token service `auth.docker.io` kept resetting over the lab network's IPv6 route.
+
+**Evidence:** `scripts/docker-lifecycle.ps1` produced `evidence/docker-lifecycle-log.txt`, covering build, history, run, logs, inspect, stats, `exec` (runs as user `homestay` on Java 17), stop, start and restart. Health was `UP` after 15 s, 12 s and 12 s. Jenkins `homestay-cicd #8` passed every stage: 21 unit tests, 9 Selenium tests, image `localhost:5000/homestay-host-platform:1.0.8`. The registry lists the tags `["latest","1.0.8"]`, the container is `(healthy)` on 8085 and the smoke test is `UP`.
 
 ![CI/CD pipeline](diagrams/cicd-pipeline.png)
 
 ### 4.7 Configuration management (Tasks 13–14)
 The Ansible roles `common` (packages, user, folders, env file, firewall), `docker` (engine, service, group) and `homestay_app` (pull, run, health check, release record, `block/rescue` auto-rollback). The playbooks are `configure`, `site`, `deploy`, `rollback` and `healthcheck`. A second run reports `changed=0`. An unhealthy or missing release is rolled back to the last good version automatically, and `rollback.yml` returns to the previous release on demand (`docs/13-configuration-spec.md`).
+
+`scripts/ansible-wsl-run.sh` runs the whole sequence inside WSL2 Ubuntu 24.04 and logs it to `evidence/ansible/`. The release images are exported from Docker Desktop with `docker.exe save` and shipped to the node through `app_image_archive`, so the node needs no registry access. The node app runs on port 8090.
+
+| Run | PLAY RECAP |
+|---|---|
+| `configure.yml` (first run) | ok=12 **changed=8** failed=0 |
+| `configure.yml` (rerun) | ok=12 **changed=0** failed=0 |
+| `configure.yml --check --diff` | ok=12 changed=0 failed=0 |
+| `site.yml -e app_version=1.0.0` (provision + deploy) | ok=22 **changed=4** failed=0 |
+| `site.yml -e app_version=1.0.0` (rerun) | ok=22 **changed=0** failed=0 |
+| `deploy.yml -e app_version=1.0.8` (upgrade) | ok=12 changed=5 failed=0 → current=1.0.8, previous=1.0.0 |
+| `deploy.yml -e app_version=9.9.9-broken` | **failed=1 rescued=1** → *"Recovered: 1.0.8 is running again"* |
+| `rollback.yml` | ok=14 changed=3 failed=0 → current=1.0.0, previous=1.0.8 |
+| `deploy.yml -e app_version=1.0.8` (roll forward) + `healthcheck.yml` | failed=0, health `UP` |
 
 ---
 
@@ -135,10 +153,10 @@ The Ansible roles `common` (packages, user, folders, env file, firewall), `docke
 | Staff blocked from confirm/cancel/add property | ✔ unit, MockMvc and Selenium tests |
 | ≥ 20 automated tests + 5 Selenium journeys | ✔ 21 + 9 |
 | Commit → tested build < 10 min | ✔ *(record your Jenkins duration)* |
-| Broken commit stops deployment | ✔ T10 evidence |
-| Versioned container healthy < 60 s | ✔ T11/T12 evidence |
-| Ansible idempotent (`changed=0`) | ✔ T14 evidence |
-| Rollback < 2 min | ✔ T14 evidence |
+| Broken commit stops deployment | ✔ `homestay-cicd #4` failed at Selenium, deploy stages skipped; `#5` green after the fix |
+| Versioned container healthy < 60 s | ✔ health UP in 12–15 s (T11); `#8` image 1.0.8 healthy (T12) |
+| Ansible idempotent (`changed=0`) | ✔ configure and site reruns `changed=0` (T13/T14) |
+| Rollback < 2 min | ✔ automatic rollback (`rescued=1`) and `rollback.yml` both completed within one play |
 
 *(Insert your screenshots from the `evidence\` folder under each heading.)*
 
