@@ -1,0 +1,32 @@
+---
+- name: Install Docker engine and Python SDK
+  tags: [packages]
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: docker_install | bool
+
+- name: Ensure Docker service is running and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  when: docker_install | bool
+
+- name: Add application user to the docker group
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    groups: docker
+    append: true
+
+- name: Check Docker is reachable
+  ansible.builtin.command: docker version --format '{{ "{{" }} .Server.Version {{ "}}" }}'
+  register: docker_version
+  changed_when: false
+  check_mode: false        # read-only, so also run it during --check
+
+- name: Show Docker version
+  ansible.builtin.debug:
+    msg: "Docker server {{ docker_version.stdout }}"

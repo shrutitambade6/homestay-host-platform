@@ -1,0 +1,10 @@
+---
+# Full provisioning of a clean node: configure + deploy (Tasks 13, 14, 15)
+# Run:  ansible-playbook playbooks/site.yml -e app_version=1.0.7
+- name: Provision and deploy Homestay node
+  hosts: homestay_nodes
+  become: true
+  roles:
+    - common
+    - docker
+    - homestay_app

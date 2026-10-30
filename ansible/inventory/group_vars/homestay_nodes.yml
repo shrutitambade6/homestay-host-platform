@@ -1,0 +1,51 @@
+---
+# ---------------------------------------------------------------------------
+# Configuration specification for a Homestay node (Task 13)
+# ---------------------------------------------------------------------------
+
+# Users and groups
+app_user: homestay
+app_group: homestay
+
+# Folders
+app_base_dir: /opt/homestay
+app_config_dir: "{{ app_base_dir }}/config"
+app_release_dir: "{{ app_base_dir }}/release"
+app_backup_dir: "{{ app_base_dir }}/backups"
+app_log_dir: /var/log/homestay
+
+# OS packages
+required_packages:
+  - curl
+  - ca-certificates
+  - tree
+  - jq
+  - python3-pip
+
+# Docker
+docker_install: true          # set false if Docker Desktop WSL integration already provides docker
+docker_packages:
+  - docker.io
+  - python3-docker
+
+# Application / container
+app_image_repo: shrutitambade/homestay-host-platform   # change to <your-dockerhub-user>/homestay-host-platform
+app_version: latest                                     # override: -e app_version=1.0.7
+app_container_name: homestay-app
+app_container_port: 8080
+app_host_port: 8090              # 8085 is used by the Jenkins-deployed container on Windows
+app_env: staging
+app_java_opts: "-Xms128m -Xmx384m"
+app_data_volume: homestay-data
+
+# Optional: deploy from an image archive instead of a registry
+#   (create it on Windows with: docker save -o homestay.tar <repo>:<tag>)
+# app_image_archive: /mnt/c/Users/<you>/homestay.tar
+
+# Health check
+app_health_path: /actuator/health
+app_health_retries: 24
+app_health_delay: 5
+
+# Firewall (ufw) - usually not available in WSL, enable on a real VM
+firewall_enabled: false

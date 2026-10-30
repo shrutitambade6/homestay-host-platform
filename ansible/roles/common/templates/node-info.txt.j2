@@ -1,0 +1,7 @@
+Managed by Ansible
+Node:        {{ inventory_hostname }}
+OS:          {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+App user:    {{ app_user }}
+Base dir:    {{ app_base_dir }}
+Host port:   {{ app_host_port }}
+Environment: {{ app_env }}
