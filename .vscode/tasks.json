@@ -11,7 +11,8 @@
     {
       "label": "1. Run app (http://localhost:8081)",
       "type": "shell",
-      "command": "mvn -B spring-boot:run \"-Dspring-boot.run.arguments=--server.port=8081\"",
+      "command": "mvn -B spring-boot:run",
+      "options": { "env": { "SERVER_PORT": "8081", "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot", "PATH": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.101-hotspot\\bin;C:\\tools\\apache-maven-3.10.0\\bin;${env:PATH}" } },
       "isBackground": true,
       "problemMatcher": { "owner": "spring", "pattern": { "regexp": "^x^" },
         "background": { "activesBegin": ".", "beginsPattern": "Scanning for projects", "endsPattern": "Started HomestayApplication|Started .* in" } },
